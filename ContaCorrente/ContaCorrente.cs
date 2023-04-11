@@ -14,55 +14,90 @@ namespace ContaCorrente
         public int saldo;
         public int limite;
         public bool ehEspecial = false;
-        //FUNÇÕES
-        public int valorSaque;
-        public int valorDeposito;
-        public int valorTransferencia;
 
-        public void SacarValor(int valorSaque)
+        //FUNÇÕES
+        public int quantia;
+        public string msgEspecial;
+        public Movimentacao[] movimentacao;
+
+        public int PosicaoVazia()
         {
-            if(valorSaque> saldo)
+            int vazio = 0;
+            for (int i = 0; i < this.movimentacao.Length; i++)
             {
-                Console.WriteLine("Operação inválida");
-                saldo = saldo;
-            }            
-            else if(valorSaque > limite)
-            {
-                Console.WriteLine("Operação inválida! Sem Limite!");
-                saldo = saldo;
+                if (this.movimentacao[i] == null)
+                {
+                    vazio = i;
+                }
             }
-            else 
-            { 
-            saldo -= valorSaque;
-            Console.WriteLine($"Após o saque de R${valorSaque} o seu saldo é de R${saldo}", ConsoleColor.Red);
+
+            return vazio;
+        }
+        public string MensagemEspecial()
+        {
+            if (this.ehEspecial == true) //Altera a mensagem de é especial na função VerExtrato para que não moster True/False
+                msgEspecial += "Sim.";
+            else
+                msgEspecial += "Não.";
+
+            return msgEspecial;
+        }
+        public void SacarValor(int quantia)
+        {
+            if(quantia < this.limite + this.saldo)
+            {
+                this.saldo -= quantia;
+
+                Movimentacao mx = new Movimentacao();
+                mx.valor = quantia;
+                mx.tipo = "DÉBITO";
+                mx.descricao = $"Saque de R${quantia}.";
+                this.movimentacao[PosicaoVazia()] = mx;
             }
         }        
-
-        public void DepositarValor(int valorDeposito)
+        public void DepositarValor(int quantia)
         {
-            saldo += valorDeposito;
-            Console.WriteLine($"Com um depósito de R${valorDeposito} seu saldo agora é R${saldo}", ConsoleColor.Green);
-        }
+            this.saldo += quantia;
+            
+            Movimentacao mx = new Movimentacao();
+            mx.valor = quantia;
+            mx.tipo = "CRÉDITO";
+            mx.descricao = $"Depósito de R${quantia}.";
+            this.movimentacao[PosicaoVazia()] = mx;
 
-        public void FazerTransferencia(ContaCorrente conta2, int valorTransferencia)
+        }
+        public void VerSaldo(int saldo)
         {
-            if (conta2 == this)
-            {
-                Console.WriteLine("Não pode transferir para sua própria conta", ConsoleColor.Red);
-            }
-
-            else if (saldo < valorTransferencia)
-            {
-                Console.WriteLine("Saldo insuficiente!", ConsoleColor.Red);
-            }
-
-            else
-            {
-                saldo -= valorTransferencia;
-                conta2.saldo += valorTransferencia;
-                Console.WriteLine($"Transferencia realizada no valor de R${valorTransferencia} para a conta {conta2}");
-            }
+            Console.WriteLine($"Seu saldo é:R${this.saldo}");
         }
-
+        public void VerExtrato()
+        {
+            Console.Title = $"Banco do Caio - Extrato da Conta {this.numero}";
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"------------------------------");
+            Console.WriteLine($"           CONTA {this.numero}           ");
+            Console.WriteLine($"------------------------------");
+            Console.WriteLine($"Número: {this.numero}");
+            Console.WriteLine($"Saldo: R${this.saldo}");
+            Console.WriteLine($"Limite: R${this.limite}");
+            Console.WriteLine($"É conta especial: {this.MensagemEspecial()}");
+            Console.WriteLine($"------------------------------");
+            Console.WriteLine($"        MOVIMENTAÇÕES        ");
+            Console.WriteLine($"------------------------------");
+            Console.ResetColor();
+            for (int i = 0; i < movimentacao.Length; i++) 
+            { 
+                if (this.movimentacao[i] != null)
+                {
+                    this.movimentacao[i].ShowDescricao();
+                }
+            }
+            Console.WriteLine($"------------------------------", Console.ForegroundColor = ConsoleColor.Cyan);
+        }
+        public void FazerTransferencia(ContaCorrente conta2, int quantia)
+        {
+            this.SacarValor(quantia);
+            conta2.DepositarValor(quantia);
+        }
     }
 }
